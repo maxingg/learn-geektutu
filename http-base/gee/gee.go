@@ -1,8 +1,10 @@
 package gee
 
 import (
+	"html/template"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 )
 
@@ -18,8 +20,10 @@ type (
 
 	Engine struct {
 		*RouterGroup
-		router *router
-		groups []*RouterGroup
+		router        *router
+		groups        []*RouterGroup
+		htmlTemplates *template.Template
+		funcMap       template.FuncMap
 	}
 )
 
@@ -31,6 +35,7 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	context := newContext(w, r)
+	context.engine = engine
 	// 这里只是中间件的添加
 	context.handlers = middlewares
 	engine.router.handle(context)
@@ -67,6 +72,34 @@ func (group *RouterGroup) Group(prefix string) *RouterGroup {
 	}
 	engine.groups = append(engine.groups, newGroup)
 	return newGroup
+}
+
+// r.Static("/assets", "./static")
+func (group *RouterGroup) Static(relativePath, root string) {
+	handler := group.createStaticHandler(relativePath, http.Dir(root))
+	urlPattern := path.Join(relativePath, "/*filepath")
+	group.GET(urlPattern, handler)
+}
+
+func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileSystem) HandleFunc {
+	absolutePath := path.Join(group.prefix, relativePath)
+	fileServer := http.StripPrefix(absolutePath, http.FileServer(fs))
+	return func(context *Context) {
+		file := context.Param("filepath")
+		if _, err := fs.Open(file); err != nil {
+			context.status(http.StatusNotFound)
+			return
+		}
+		fileServer.ServeHTTP(context.Writer, context.Req)
+	}
+}
+
+func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
+	engine.funcMap = funcMap
+}
+
+func (engine *Engine) LoadHTMGlob(pattern string) {
+	engine.htmlTemplates = template.Must(template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
 }
 
 func New() *Engine {
