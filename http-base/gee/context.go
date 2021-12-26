@@ -14,7 +14,23 @@ type Context struct {
 	Path       string
 	Method     string
 	Params     map[string]string
-	statusCode int
+	StatusCode int
+	handlers   []HandleFunc
+	index      int
+}
+
+func (c *Context) Next() {
+	c.index++
+	for ; c.index < len(c.handlers); c.index++ {
+		c.handlers[c.index](c)
+	}
+}
+
+func (c *Context) Fail(code int, err string) {
+	c.index = len(c.handlers)
+	c.JSON(code, H{
+		"message": err,
+	})
 }
 
 func (c *Context) Param(key string) string {
@@ -56,7 +72,7 @@ func (c *Context) setHeader(key string, value string) {
 }
 
 func (c *Context) status(code int) {
-	c.statusCode = code
+	c.StatusCode = code
 	c.Writer.WriteHeader(code)
 }
 
@@ -71,6 +87,6 @@ func newContext(w http.ResponseWriter, r *http.Request) *Context {
 		Req:    r,
 		Path:   r.URL.Path,
 		Method: r.Method,
-		Params: make(map[string]string),
+		index:  -1,
 	}
 }
