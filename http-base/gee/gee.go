@@ -112,3 +112,9 @@ func New() *Engine {
 	engine.groups = []*RouterGroup{engine.RouterGroup}
 	return engine
 }
+
+func Default() *Engine {
+	engine := New()
+	engine.Use(Logger(), Recovery())
+	return engine
+}
