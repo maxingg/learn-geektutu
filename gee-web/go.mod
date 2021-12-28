@@ -1,4 +1,4 @@
-module geektutu/http-base
+module geektutu/gee-web
 
 go 1.17
 
