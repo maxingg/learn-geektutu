@@ -1,3 +1,3 @@
-module geektutu/gee-cache/geecache
+module geecache
 
 go 1.17
