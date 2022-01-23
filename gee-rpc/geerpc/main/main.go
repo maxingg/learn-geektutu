@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"geektutu/gee-rpc/geerpc"
 	"log"
 	"net"
@@ -49,8 +50,9 @@ func main() {
 				Num1: i,
 				Num2: i * i,
 			}
+			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 			var reply int
-			if err := client.Call("Foo.Sum", args, &reply); err != nil {
+			if err := client.Call(ctx, "Foo.Sum", args, &reply); err != nil {
 				log.Fatal("call Foo.Sum error:", err)
 			}
 			log.Printf("%d + %d = %d", args.Num1, args.Num2, reply)
