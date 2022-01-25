@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"reflect"
 	"strings"
 	"sync"
@@ -32,6 +33,22 @@ var DefaultOption = &Option{
 // represent RPC Server
 type Server struct {
 	serviceMap sync.Map
+}
+
+func (s *Server) ServeHTTP(writer http.ResponseWriter, r *http.Request) {
+	if r.Method != "CONNECT" {
+		writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		writer.WriteHeader(http.StatusMethodNotAllowed)
+		_, _ = io.WriteString(writer, "405 must CONNECT\n")
+		return
+	}
+	conn, _, err := writer.(http.Hijacker).Hijack()
+	if err != nil {
+		log.Print("rpc hijacking ", r.RemoteAddr, ": ", err.Error())
+		return
+	}
+	_, _ = io.WriteString(conn, "HTTP/1.0 "+connected+"\n\n")
+	s.ServeConn(conn)
 }
 
 func (s *Server) Register(rcvr interface{}) error {
@@ -212,4 +229,19 @@ type request struct {
 	argv, replyv reflect.Value
 	mtype        *methodType
 	svc          *service
+}
+
+const (
+	connected        = "200 Connected to Gee RPC"
+	defaultPath      = "/geerpc"
+	defaultDebugPath = "/debug/geerpc"
+)
+
+func (server *Server) HandleHTTP() {
+	http.Handle(defaultPath, server)
+	http.Handle(defaultDebugPath, debugHTTP{server})
+}
+
+func HandleHttp() {
+	DefaultServer.HandleHTTP()
 }
