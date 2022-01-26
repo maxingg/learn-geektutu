@@ -89,7 +89,7 @@ func NewServer() *Server {
 
 var DefaultServer = NewServer()
 
-func (server *Server) Accpet(lis net.Listener) {
+func (server *Server) Accept(lis net.Listener) {
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
@@ -101,7 +101,7 @@ func (server *Server) Accpet(lis net.Listener) {
 }
 
 func Accept(lis net.Listener) {
-	DefaultServer.Accpet(lis)
+	DefaultServer.Accept(lis)
 }
 
 func (server *Server) ServeConn(conn io.ReadWriteCloser) {
