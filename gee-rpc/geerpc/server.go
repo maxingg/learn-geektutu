@@ -110,7 +110,7 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 	}()
 	var opt Option
 	if err := json.NewDecoder(conn).Decode(&opt); err != nil {
-		log.Println("rpc server: options error: ", err)
+		log.Println("rpc server: option error: ", err)
 		return
 	}
 	if opt.MagicNumber != MagicNumber {
@@ -120,6 +120,11 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 	f := codec.NewCodecFuncMap[opt.CodecType]
 	if f == nil {
 		log.Printf("rpc server: invalid codec type %s", opt.CodecType)
+		return
+	}
+	// 解决tcp粘包问题
+	if err := json.NewEncoder(conn).Encode(&opt); err != nil {
+		log.Println("rpc server: option error:", err)
 		return
 	}
 	// 直到此刻我们才新建一个解码器
