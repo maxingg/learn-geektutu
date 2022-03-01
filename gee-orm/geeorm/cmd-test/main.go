@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -15,6 +14,4 @@ func main() {
 	//result, _ := s.Raw("INSERT INTO User(`Name`) values (?), (?)", "Tom", "Sam").Exec()
 	//count, _ := result.RowsAffected()
 	//fmt.Printf("Exec success, %d affected\n", count)
-	var s interface{} = "3"
-	fmt.Println(s)
 }

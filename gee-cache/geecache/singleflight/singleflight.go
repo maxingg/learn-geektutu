@@ -15,6 +15,7 @@ type Group struct {
 
 func (g *Group) Do(key string, fn func() (interface{}, error)) (interface{}, error) {
 	g.mu.Lock()
+	// 延迟加载
 	if g.m == nil {
 		g.m = make(map[string]*call)
 	}
